@@ -5,10 +5,10 @@
 #include <unistd.h>
 
 int main(int argc, char* argv[]) {;
-    int pipeFd[2];
-    char strIn[100];
-    pipeFd[0] = std::stoi(argv[0]);
-    pipeFd[1] = std::stoi(argv[1]);
+    //int pipeFd[2];
+    //char strIn[100];
+    //pipeFd[0] = std::stoi(argv[0]);
+    //pipeFd[1] = std::stoi(argv[1]);
     char c;
     int st;
     int val;
@@ -16,18 +16,15 @@ int main(int argc, char* argv[]) {;
     for (int i = 0; i < 10; i++) {
         A[i] = NULL;
     }
-    close(pipeFd[1]);
-    read(pipeFd[0], strIn, 100);
     while (1){
-        
-        fscanf(pipeFd[0], "%c", &c);
+        scanf("%c", &c);
         switch (c) {
             case 'c':
-                fscanf(strIn, "%d", &st);
+                scanf("%d", &st);
                 A[st] = stack_create();
                 break;
             case 'd':
-                fscanf(strIn, "%d", &st);
+                scanf("%d", &st);
                 if (A[st] != NULL) {
                     stack_delete(&A[st]);
                 } else {
@@ -35,12 +32,12 @@ int main(int argc, char* argv[]) {;
                 }
                 break;
             case 'i':
-                fscanf(strIn, "%d", &st);
+                scanf("%d", &st);
                 if (A[st] == NULL) {
                     printf("?\n");
                     break;
                 }
-                while (fscanf(strIn, "%d", &val) == 1) {
+                while (scanf("%d", &val) == 1) {
                     stack_push(A[st], val);
                     if (getchar() == '\n') {
                         break;
@@ -48,7 +45,7 @@ int main(int argc, char* argv[]) {;
                 }
                 break;
             case 'o':
-                fscanf(strIn, "%d", &st);
+                scanf("%d", &st);
                 if (A[st] == NULL) {
                     printf("?\n");
                     break;
@@ -61,7 +58,7 @@ int main(int argc, char* argv[]) {;
                 }
                 break;
             case 's':
-                fscanf(strIn, "%d", &st);
+                scanf("%d", &st);
                 if (A[st] == NULL) {
                     printf("?\n");
                     break;
@@ -70,7 +67,7 @@ int main(int argc, char* argv[]) {;
                 sort(A[st]);
                 break;
             case 'p':
-                fscanf(strIn, "%d", &st);
+                scanf("%d", &st);
                 if (A[st] == NULL) {
                     printf("?\n");
                     break;
@@ -93,6 +90,8 @@ int main(int argc, char* argv[]) {;
             default:
                 printf("Unknown command\n");
                 break;
+            fflush(stdout);
+            
         }
     }	
 }
