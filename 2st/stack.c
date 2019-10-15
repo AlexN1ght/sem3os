@@ -10,12 +10,12 @@
 Stack* stack_create(void)
 {
     Stack *out = NULL;
-    out = malloc(sizeof(Stack));
+    out = (Stack*)malloc(sizeof(Stack));
     if (out == NULL) {
         exit(OUT_OF_MEMORY);
     }
     out->size = INIT_SIZE;
-    out->data = malloc(out->size * sizeof(data_type));
+    out->data = (data_type*)malloc(out->size * sizeof(data_type));
     if (out->data == NULL) {
         free(out);
         exit(OUT_OF_MEMORY);
@@ -32,7 +32,7 @@ void stack_delete (Stack **stack) {
 
 void resize(Stack *stack) {
     stack->size *= MULTIPLIER;
-    stack->data = realloc(stack->data, stack->size * sizeof(data_type));
+    stack->data = (data_type*)realloc(stack->data, stack->size * sizeof(data_type));
     if (stack->data == NULL) {
         exit(STACK_OVERFLOW);
     }
@@ -63,7 +63,7 @@ data_type stack_pop(Stack *stack)
 
 void stack_print(Stack *stack)
 {
-	for(int i = 0; i + 1 <= stack->top; i++)
+	for(int i = 0; i + 1 <= (int)stack->top; i++)
 	{
 		printf("%d\n", stack->data[i]);
 	}
