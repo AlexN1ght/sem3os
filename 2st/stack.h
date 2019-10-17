@@ -16,7 +16,7 @@ void stack_delete (Stack **stack);
 int stack_is_empty(Stack *stack);
 void stack_push(Stack *stack, data_type value);
 data_type stack_pop(Stack *stack);
-void stack_print(Stack *stack);
+void stack_print(Stack *stack, int fdOut);
 size_t stack_size(Stack *stack);
 
 #endif

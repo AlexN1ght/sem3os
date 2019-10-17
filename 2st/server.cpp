@@ -5,10 +5,12 @@
 #include <unistd.h>
 
 int main(int argc, char* argv[]) {;
-    //int pipeFd[2];
+    int pipeFd[2];
+    int buf;
     //char strIn[100];
-    //pipeFd[0] = std::stoi(argv[0]);
-    //pipeFd[1] = std::stoi(argv[1]);
+    pipeFd[0] = std::stoi(argv[0]);
+    pipeFd[1] = std::stoi(argv[1]);
+    close(pipeFd[0]);
     char c;
     int st;
     int val;
@@ -16,64 +18,117 @@ int main(int argc, char* argv[]) {;
     for (int i = 0; i < 10; i++) {
         A[i] = NULL;
     }
+    write(pipeFd[1], "Yay:", 6);
     while (1){
         scanf("%c", &c);
         switch (c) {
             case 'c':
                 scanf("%d", &st);
+                if (st > 9 || st < 0) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
+                    break;
+                }
                 A[st] = stack_create();
+                buf = 0;
+                write(pipeFd[1], &buf, sizeof(int));
                 break;
             case 'd':
                 scanf("%d", &st);
+                if (st > 9 || st < 0) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
+                    break;
+                }
                 if (A[st] != NULL) {
                     stack_delete(&A[st]);
+                    buf = 0;
+                    write(pipeFd[1], &buf, sizeof(int));
                 } else {
-                    printf("Stack dose not exist\n");
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
                 }
                 break;
             case 'i':
                 scanf("%d", &st);
-                if (A[st] == NULL) {
-                    printf("?\n");
+                if (st > 9 || st < 0) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
                     break;
                 }
-                while (scanf("%d", &val) == 1) {
+                if (A[st] == NULL) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
+                    break;
+                }
+                while (scanf("%d", val) {
                     stack_push(A[st], val);
-                    if (getchar() == '\n') {
+                    c = getchar();
+                    if (c == '\n') {
                         break;
                     }
                 }
+                buf = 0;
+                write(pipeFd[1], &buf, sizeof(int));
                 break;
             case 'o':
                 scanf("%d", &st);
-                if (A[st] == NULL) {
-                    printf("?\n");
+                if (st > 9 || st < 0) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
                     break;
                 }
-                getchar();
+                if (A[st] == NULL) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
+                    break;
+                }
                 if (!stack_is_empty(A[st])) {
-                    stack_pop(A[st]);
+                    buf = 1;
+                    write(pipeFd[1], &buf, sizeof(int));
+                    buf = stack_pop(A[st]);
+                    write(pipeFd[1], &buf, sizeof(int));
                 } else {
-                    printf("The stack is empty\n");
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
                 }
                 break;
             case 's':
                 scanf("%d", &st);
-                if (A[st] == NULL) {
-                    printf("?\n");
+                if (st > 9 || st < 0) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
                     break;
                 }
-                getchar();
+                if (A[st] == NULL) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
+                    break;
+                }
+                if (stack_size(A[st]) < 0) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
+                    break;
+                }
                 sort(A[st]);
+                buf = 0;
+                write(pipeFd[1], &buf, sizeof(int));
                 break;
             case 'p':
                 scanf("%d", &st);
-                if (A[st] == NULL) {
-                    printf("?\n");
+                if (st > 9 || st < 0) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
                     break;
                 }
-                getchar();
-                stack_print(A[st]);
+                if (A[st] == NULL) {
+                    buf = -1;
+                    write(pipeFd[1], &buf, sizeof(int));
+                    break;
+                }
+                buf = stack_size(A[st]);
+                write(pipeFd[1], &buf, sizeof(int));
+                stack_print(A[st], pipeFd[1]);
                 break;
             case 'q':
                 for (int i = 0; i < 10; i++) {
@@ -83,16 +138,18 @@ int main(int argc, char* argv[]) {;
                 }
                 return 0;
                 break;
-            case ' ':
-                break;
-            case '\n':
-                break;
+            //case ' ':
+            //    break;
+            //case '\n':            
+            //    break;
             default:
-                printf("Unknown command\n");
+                buf = -1;
+                write(pipeFd[1], &buf, sizeof(int));
                 break;
-            fflush(stdout);
-            
         }
-    }	
+        while(c != '\n') {
+            c = getchar();
+        }
+    }
 }
 

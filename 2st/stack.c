@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "stack.h"
+#include <unistd.h>
 
 #define INIT_SIZE 10
 #define STACK_OVERFLOW  -100
@@ -61,11 +62,12 @@ data_type stack_pop(Stack *stack)
     return stack->data[stack->top];
 }
 
-void stack_print(Stack *stack)
+void stack_print(Stack *stack, int fdOut)
 {
 	for(int i = 0; i + 1 <= (int)stack->top; i++)
 	{
-		printf("%d\n", stack->data[i]);
+	    
+        write(fdOut, &stack->data[i], sizeof(int));
 	}
 }
 

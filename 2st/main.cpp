@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <cstring>
 #include <string>
 
 int main() {
@@ -17,34 +18,27 @@ int main() {
         std::cout << "Create server procces\n";
         dup2(pipeFdToServ[0], STDIN_FILENO);
         close(pipeFdToServ[1]);
-        dup2(pipeFdFromServ[1], STDOUT_FILENO);
-        close(pipeFdFromServ[0]);
-        //execl("./server.out", std::to_string(pipeFd[0]).c_str(), std::to_string(pipeFd[1]).c_str(), (char*)NULL);
-        execl("./server.out", (char*)NULL);
+        execl("./server.out", std::to_string(pipeFdFromServ[0]).c_str(),
+                              std::to_string(pipeFdFromServ[1]).c_str(), (char*)NULL);
         std::cout << "error " << errno << "\n";
     }
     close(pipeFdToServ[0]);
     close(pipeFdFromServ[1]);
-    //dup2(STDOUT_FILENO, pipeFdFromServ[0]);
-    std::cout << "Test "<< "\n";
+    int msgSize, inMsg;
+    read(pipeFdFromServ[0], inStr, 6);
+    std::cout << inStr << '\n';
     while (true) {
-        std::cout << "Test 1 "<< "\n";
         gets(outStr);
         int a = strlen(outStr);
         outStr[a] = '\n';
         outStr[a + 1] = '\0';
-        std::cout << "Test 2"<< "\n";
         write(pipeFdToServ[1], outStr, strlen(outStr));
-        //close(pipeFdToServ[1]);
-        //close(pipeFdFromServ[1]);
-        //wait(NULL);
-        std::cout << "Test 3"<< std::endl; 
-        std::cout << "Test 5"<< std::endl;
-        read(pipeFdFromServ[0], inStr, 1);
-        //dup2(STDOUT_FILENO, pipeFdFromServ[0]);
-        //wait(NULL);
-        std::cout << "Test 4"<< std::endl;
-        std::cout << inStr;
+        read(pipeFdFromServ[0], &msgSize, sizeof(int));
+        std::cout << msgSize << '\n';
+        for (int i = 0; i < msgSize; i++) {
+            read(pipeFdFromServ[0], &inMsg, sizeof(int));
+            std::cout << inMsg << '\n';
+        }
     }
     
     return 0;
