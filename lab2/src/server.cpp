@@ -18,7 +18,6 @@ int main(int argc, char* argv[]) {;
     for (int i = 0; i < 10; i++) {
         A[i] = NULL;
     }
-    write(pipeFd[1], "Yay:", 6);
     while (1){
         scanf("%c", &c);
         switch (c) {
@@ -61,7 +60,7 @@ int main(int argc, char* argv[]) {;
                     write(pipeFd[1], &buf, sizeof(int));
                     break;
                 }
-                while (scanf("%d", val) {
+                while (scanf("%d", &val)) {
                     stack_push(A[st], val);
                     c = getchar();
                     if (c == '\n') {
@@ -136,12 +135,10 @@ int main(int argc, char* argv[]) {;
                         stack_delete(&A[i]);
                     }
                 }
+                buf = -2;
+                write(pipeFd[1], &buf, sizeof(int));
                 return 0;
                 break;
-            //case ' ':
-            //    break;
-            //case '\n':            
-            //    break;
             default:
                 buf = -1;
                 write(pipeFd[1], &buf, sizeof(int));
