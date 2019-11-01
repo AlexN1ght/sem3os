@@ -1,10 +1,11 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <list>
 #include <vector>
 #include <queue>
 
-const int THREAD_COUNT = 10;
+int THREAD_COUNT = 1;
 std::mutex NL_m;
 
 template<typename L>
@@ -32,13 +33,13 @@ void start_thread(std::vector<std::thread>& threads, L&& task)
 }
 
 template <typename T>
-int minPath(T& M, int nodes, int from, int to) {
+int minPath(T M, int from, int to) {
     if (from == to)
         return 0;
     std::vector<std::thread> threads(THREAD_COUNT);
     std::queue<int> CL;
     std::queue<int> NL; 
-    int visited[nodes]{0};
+    int visited[M.size()]{0};
     visited[from] = 1;
     int path = 0;
     int end = 0, closed = 1;
@@ -52,17 +53,15 @@ int minPath(T& M, int nodes, int from, int to) {
             int CN = CL.front();
             CL.pop();
             start_thread(threads, [&, CN]{
-                for (int i = 0; i < nodes; i++) {
-                    if (M[CN][i] == 1) {
-                        if (visited[i] == 0) {
-                            visited[i] = 1;
-                            if (i == to) {
-                                end = 1;
-                            } else {
-                                NL_m.lock();
-                                NL.push(i);
-                                NL_m.unlock();
-                            }
+                for (int i: M[CN]) {
+                    if (visited[i] == 0) {
+                        visited[i] = 1;
+                        if (i == to) {
+                            end = 1;
+                        } else {
+                            NL_m.lock();
+                            NL.push(i);
+                            NL_m.unlock();
                         }
                     }
                 }    
@@ -79,7 +78,36 @@ int minPath(T& M, int nodes, int from, int to) {
     return path;    
 }
 
+template <typename T>
+auto toNoW(T& M, int N) {
+    std::vector<std::list<int>> out(N);
+    int add = N;
+    for (int i = 0; i < N; i++) {
+        for (int k = 0; k < N; k++) {
+            if (M[i][k] > 0) {
+                if (M[i][k] == 1){
+                    out[i].push_back(k);
+                } else {
+                    int rest = M[i][k] - 1;
+                    out[i].push_back(add);
+                    rest--;
+                    while(rest--) {
+                        out.push_back(std::list<int>{++add});
+                    }
+                    out.push_back(std::list<int>{k});
+                    add++;
+                }
+                
+            }
+        }
+    }
+    std::cout << add - N << " nodes added\n";
+    return out;
+}
+
 int main(int argc, char *argv[]) {
+    if (argc == 2) 
+        THREAD_COUNT = std::atoi(argv[1]);
     int N;
     std::cin >> N;
     int** M = new int*[N];
@@ -92,8 +120,17 @@ int main(int argc, char *argv[]) {
     } 
     int from, to;
     std::cin >> from >> to;
-    std::cout << minPath(M, N, from, to) << std::endl;
-    
+    auto ML = toNoW(M, N);
+    for (int i = 0; i < ML.size(); i++) {
+        std::cout << i << ": ";
+        for (int k : ML[i]) {
+            std::cout << k << ' ';
+        }
+        std::cout << '\n';
+    }
+    int min = minPath(ML, from, to);
+    std::cout << "Total path: " << min << std::endl;
+    delete[] M;
     return 0;
 }
 
