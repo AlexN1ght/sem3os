@@ -1,42 +1,44 @@
 #include <iostream>
-#include <thread>
-#include <mutex>
+#include <pthread.h>
 #include <list>
 #include <vector>
 #include <queue>
 
 int THREAD_COUNT = 1;
-std::mutex NL_m;
+pthread_mutex_t NL_m;
 
-template<typename L>
-void start_thread(std::vector<std::thread>& threads, L&& task)
-{
-    for(auto&& thread: threads)
-    {
-        if(thread.joinable()) 
-            continue;
-        thread = std::thread(task);
-        puts("New thread created");
-        return;
-    }
+struct Arg {
+    std::vector<std::list<int>>* M;
+    std::queue<int>* NL;
+    int* visited;
+    int CN;
+    int* end;
+    int to;
+};
 
-    for(auto&& thread: threads)
-    {
-        if(!thread.joinable())
-            continue;
-        puts("Waiting for other thread to finish");
-        thread.join();
-        puts("Done. New thread created");
-        thread = std::thread(task);
-        return;
+void* threadFunction(void *arg) {
+    for (int i: ((Arg*)arg)->M->at(((Arg*)arg)->CN)) {
+        if (((Arg*)arg)->visited[i] == 0) {
+            ((Arg*)arg)->visited[i] = 1;
+            if (i == ((Arg*)arg)->to) {
+                *((Arg*)arg)->end = 1;
+            } else {
+                pthread_mutex_lock(&NL_m); 
+                ((Arg*)arg)->NL->push(i);
+                pthread_mutex_unlock(&NL_m); 
+            }
+        }
     }
-}
+    return NULL;
+};
 
 template <typename T>
 int minPath(T M, int from, int to) {
     if (from == to)
         return 0;
-    std::vector<std::thread> threads(THREAD_COUNT);
+    std::vector<pthread_t> threads(THREAD_COUNT);
+    int threadIter = 0;
+    Arg thArgs[THREAD_COUNT];
     std::queue<int> CL;
     std::queue<int> NL; 
     int visited[M.size()]{0};
@@ -51,28 +53,33 @@ int minPath(T M, int from, int to) {
         puts("New layer");
         while (!CL.empty()) {
             int CN = CL.front();
-            CL.pop();
-            start_thread(threads, [&, CN]{
-                for (int i: M[CN]) {
-                    if (visited[i] == 0) {
-                        visited[i] = 1;
-                        if (i == to) {
-                            end = 1;
-                        } else {
-                            NL_m.lock();
-                            NL.push(i);
-                            NL_m.unlock();
-                        }
-                    }
-                }    
-            });
+            CL.pop();;
+            if (threads[threadIter]) {
+                puts("Waiting for other thread");
+                pthread_join(threads[threadIter], NULL);
+                //threads[threadIter] = 0;
+            }
+            thArgs[threadIter].CN = CN;
+            thArgs[threadIter].end = &end;
+            thArgs[threadIter].to = to;
+            thArgs[threadIter].M = &M;
+            thArgs[threadIter].visited = visited;
+            thArgs[threadIter].NL = &NL;
+            pthread_create(&threads[threadIter], NULL, threadFunction, &thArgs[threadIter]);
+            puts("Thread created");
+            threadIter = (threadIter + 1) % THREAD_COUNT;
+            
+
         }
+        puts("Waiting for all threads to stop");
         for(auto&& thread: threads)
         {
-            if(!thread.joinable())
+            if (thread == 0) 
                 continue;
-            thread.join();
+            pthread_join(thread, NULL);
+            thread = 0;
         }
+        
         swap(CL, NL);
     }
     return path;    
