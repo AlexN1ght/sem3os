@@ -66,7 +66,7 @@ void stack_print(Stack *stack, int* shared)
 {
 	for(int i = 1; i <= (int)stack->top; i++)
 	{
-        shared[i] = stack->data[i];
+        shared[i] = stack->data[i - 1];
 	}
 }
 

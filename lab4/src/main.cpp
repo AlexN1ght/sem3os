@@ -1,61 +1,190 @@
+#include "stack.h"
+#include "sort.h"
 #include <iostream>
+#include <stdio.h>
 #include <unistd.h>
-#include <sys/mman.h>
-#include <errno.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <string>
+#include <sys/mman.h>
+#include <pthread.h>
 
+typedef struct
+{
+    int stor[1024];
+    pthread_mutex_t mutex;
+} shared_data;
 
-int main() {
+static shared_data* data = NULL;
 
-    int shm = shm_open("./tmpSM", O_CREAT | O_TRUNC | O_RDWR, S_IRWXU);
-    if (shm == -1) {
-        std::cout << errno << " shm_open failed\n";
-        exit(-1);
-    }
-    int r = ftruncate(shm, sysconf(_SC_PAGE_SIZE));
-    if (r != 0) {
-        std::cout << "ftruncate failed\n";
-        exit(-2);
-    }
-    int* shared = (int*)mmap(0, sysconf(_SC_PAGE_SIZE), PROT_WRITE|PROT_READ, MAP_SHARED, shm, 0);
-    if (shared == MAP_FAILED) {
-        std::cout << "mmap failed\n";
+void initialise_shared()
+{
+    int prot = PROT_READ | PROT_WRITE;
+    int flags = MAP_SHARED | MAP_ANONYMOUS;
+    data = (shared_data*)mmap(NULL, sizeof(shared_data), prot, flags, -1, 0);
+    if (data == MAP_FAILED) {
         exit(-3);
     }
-    close(shm);
 
-    int serverPid = fork();
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+    pthread_mutex_init(&data->mutex, &attr);
+}
+
+int run_child()
+{
+    char c;
+    int st;
+    int val;
+    Stack *A[10];
+    for (int i = 0; i < 10; i++) {
+        A[i] = NULL;
+    }
+    while (1){
+        sleep(1);
+        pthread_mutex_lock(&data->mutex);
+        scanf("%c", &c);
+        switch (c) {
+            case 'c':
+                scanf("%d", &st);
+                if (st > 9 || st < 0) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                A[st] = stack_create();
+                data->stor[0] = 0;
+                break;
+            case 'd':
+                scanf("%d", &st);
+                if (st > 9 || st < 0) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                if (A[st] != NULL) {
+                    stack_delete(&A[st]);
+                    data->stor[0] = 0;
+                } else {
+                    data->stor[0] = -1;
+                }
+                break;
+            case 'i':
+                scanf("%d", &st);
+                if (st > 9 || st < 0) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                if (A[st] == NULL) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                while (scanf("%d", &val)) {
+                    stack_push(A[st], val);
+                    c = getchar();
+                    if (c == '\n') {
+                        break;
+                    }
+                }
+                data->stor[0] = 0;
+                break;
+            case 'o':
+                scanf("%d", &st);
+                if (st > 9 || st < 0) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                if (A[st] == NULL) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                if (!stack_is_empty(A[st])) {
+                    data->stor[0] = 1;
+                    data->stor[1] = stack_pop(A[st]);
+                } else {
+                    data->stor[0] = -1;
+                }
+                break;
+            case 's':
+                scanf("%d", &st);
+                if (st > 9 || st < 0) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                if (A[st] == NULL) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                if (stack_size(A[st]) < 0) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                sort(A[st]);
+                data->stor[0] = 0;
+                break;
+            case 'p':
+                scanf("%d", &st);
+                if (st > 9 || st < 0) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                if (A[st] == NULL) {
+                    data->stor[0] = -1;
+                    break;
+                }
+                data->stor[0] = stack_size(A[st]);
+                stack_print(A[st], data->stor);
+                break;
+            case 'q':
+                for (int i = 0; i < 10; i++) {
+                    if (A[i] != NULL) {
+                        stack_delete(&A[i]);
+                    }
+                }
+                data->stor[0] = -2;
+                pthread_mutex_unlock(&data->mutex);
+                return 0;
+                break;
+            default:
+                data->stor[0] = -1;
+                break;
+        }
+        while(c != '\n') {
+            c = getchar();
+        }
+        pthread_mutex_unlock(&data->mutex);
+    }
+}
+
+void run_parent()
+{
+    while (true) {
+        sleep(1);
+        pthread_mutex_lock(&data->mutex);
+        std::cout << "Mesage no: " << data->stor[0] << '\n';
+        if (data->stor[0] == -2) {
+            break;
+        }
+        for (int i = 1; i <= data->stor[0]; i++) {
+            //read(pipeFdFromServ[0], &inMsg, sizeof(int));
+            std::cout << data->stor[i] << '\n';
+        }
+        pthread_mutex_unlock(&data->mutex);
+    }
+}
+
+int main(int argc, char** argv)
+{
+    initialise_shared();
+
+    pid_t serverPid = fork();
     if (serverPid < 0) {
         std::cout << "Cannot create server procces\n";
         exit(-1);
-    }else if (serverPid == 0) {
+    } else if (serverPid == 0) {
         std::cout << "Create server procces\n";
-        execl("./server.out", std::to_string((size_t)shared).c_str(), (char*)NULL);
-        std::cout << "Cannot execute program\n" << errno << "\n";
+        run_child();
+    } else {
+        run_parent();
     }
-    //int msgSize, inMsg;
-    while (true) {
-        //std::getline(std::cin, outStr);
-        //int a = outStr.length();
-        //outStr[a] = '\n';
-        //outStr[a + 1] = '\0';
-        //if (write(pipeFdToServ[1], outStr.c_str(), a + 1) == -1) {
-        //    std::cout << "Cannot write to pipe\n";
-        //    exit(-1);
-        //}
-        //read(pipeFdFromServ[0], &msgSize, sizeof(int));
-        std::cout << "Mesage no: " << shared[0] << '\n';
-        if (shared[0] == -2) {
-            break;
-        }
-        for (int i = 1; i < shared[0] + 1; i++) {
-            //read(pipeFdFromServ[0], &inMsg, sizeof(int));
-            std::cout << shared[i] << '\n';
-        }
-    }
-    shm_unlink("./tmpSM");
+
+    munmap(data, sizeof(data));
     return 0;
 }
-

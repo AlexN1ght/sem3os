@@ -3,12 +3,12 @@ LD = g++
 CCFLAGS = -Wall -pedantic
 LDFLAGS =
 
-main.out: main.cpp server.out
-	$(LD) $(CCFLAGS) -o main.out main.cpp
-server.out: server.o stack.o sort.o
-	$(LD) $(LDFLAGS) -o server.out server.o stack.o sort.o
-server.o: server.cpp stack.h sort.h sort.c stack.c
-	$(CC) $(CCFLAGS) -c server.cpp
+
+
+main.out: main.o stack.o sort.o -lrt
+	$(LD) $(LDFLAGS) -o main.out main.o stack.o sort.o -pthread  -lrt
+main.o: main.cpp stack.h sort.h sort.c stack.c
+	$(CC) $(CCFLAGS) -c main.cpp -pthread -lrt
 sort.o: sort.c sort.h
 	$(CC) $(CCFLAGS) -c sort.c
 stack.o: stack.c stack.h
