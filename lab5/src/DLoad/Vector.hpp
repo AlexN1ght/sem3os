@@ -1,3 +1,6 @@
+#ifndef __vector_h__
+#define __vector_h__
+
 #include <iostream>
 #include <algorithm>
 #include <cassert>
@@ -23,3 +26,6 @@ void vector_swap(vector* lhs, vector* rhs);
 void vector_destroy(vector** in);
 void vector_push_back(vector* in, const value_type& value);
 value_type& vector_at(vector* in, int index);
+
+#endif
+
