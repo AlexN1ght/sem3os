@@ -1,4 +1,4 @@
-#include "vector.cpp"
+//#include "vector.cpp"
 #include "Vector.hpp"
 #include <iostream>
 #include <dlfcn.h>
@@ -31,7 +31,7 @@ vector* vector_create_method()
 void vector_push_back_method(vector* argument1, int argument2)
 {
 	void *dl_handle;
-	void (*func)(vector*, int);
+	void (*func)(vector*, const int&);
 	char *error;
  
 	dl_handle = dlopen("libvector.so", RTLD_LAZY);
@@ -40,7 +40,7 @@ void vector_push_back_method(vector* argument1, int argument2)
 		return;
 	}
  
-	func = (void (*)(vector*, int))dlsym(dl_handle, "vector_push_back");
+	func = (void (*)(vector*, const int&))dlsym(dl_handle, "vector_push_back");
 	error = dlerror();
 	if (error != NULL) {
 		printf("# %s\n", error);
@@ -65,7 +65,7 @@ int& vector_at_method(vector* argument1, int argument2)
 		exit(-1);
 	}
  
-	func = (int& (*)(vector*, int))dlsym(dl_handle, "vector_create");
+	func = (int& (*)(vector*, int))dlsym(dl_handle, "vector_at");
 	error = dlerror();
 	if (error != NULL) {
 		printf("# %s\n", error);

@@ -5,7 +5,7 @@ LDFLAGS =
 
 
 main.out: main.o vector.o libvector.so
-	$(LD) $(LDFLAGS) -o main.out main.o -rdynamic -ldl -L. -lvector -Wl,-rpath,.
+	$(LD) $(LDFLAGS) -rdynamic -o main.out main.o -ldl -L. -lvector -Wl,-rpath,.
 
 main.o: main.cpp
 	$(CC) $(CCFLAGS) -c main.cpp

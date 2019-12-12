@@ -8,7 +8,7 @@ vector* vector_create() {
     return out;
 }
 
-vector* vector_create(int size, const value_type& default_value)
+vector* vector_create_n(int size, const value_type& default_value)
 {
     vector* out = vector_create();
     assert(size >= 0);
@@ -91,7 +91,7 @@ void vector_destroy(vector** in)
     *in = nullptr;
 }
 
-void vector_push_back(vector* in, const value_type& value)
+extern void vector_push_back(vector* in, const value_type& value)
 {
     if (in->already_used_ < in->storage_size_) {
         in->storage_[in->already_used_] = value;
@@ -104,7 +104,7 @@ void vector_push_back(vector* in, const value_type& value)
         next_size = in->storage_size_ * 2;
     }
 
-    vector* next = vector_create(next_size);
+    vector* next = vector_create_n(next_size);
 
     next->already_used_ = in->already_used_;
 
@@ -117,7 +117,7 @@ void vector_push_back(vector* in, const value_type& value)
     delete next;
 }
 
-value_type& vector_at(vector* in, int index)
+extern value_type& vector_at(vector* in, int index)
 {
     if (index < 0 || index > in->already_used_) {
         std::cout << "Out of range\n";

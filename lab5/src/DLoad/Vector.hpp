@@ -16,16 +16,16 @@ typedef struct vector {
 } vector;
 
 
-vector* vector_create();
-vector* vector_create(int size, const value_type& default_value = value_type());
+extern "C" vector* vector_create();
+vector* vector_create_n(int size, const value_type& default_value = value_type());
 int vector_size(vector* in);
 bool vector_is_empty(vector* in);
 iterator vector_begin(vector* in);
 iterator vector_end(vector* in);
 void vector_swap(vector* lhs, vector* rhs);
-void vector_destroy(vector** in);
-void vector_push_back(vector* in, const value_type& value);
-value_type& vector_at(vector* in, int index);
+extern "C" void vector_destroy(vector** in);
+extern "C" void vector_push_back(vector* in, const value_type& value);
+extern "C" value_type& vector_at(vector* in, int index);
 
 #endif
 
