@@ -1,6 +1,6 @@
 CC = g++
 LD = g++
-CCFLAGS = -Wall -pedantic
+CCFLAGS = -Wall -pedantic -std=c++14
 LDFLAGS =
 
 
