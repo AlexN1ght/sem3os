@@ -69,7 +69,49 @@ int main(void) {
                     }
                 }
                 break;
-
+            case REMOVE:
+                std::cin >> id;
+                if (NodesAdr.find(id) == NodesAdr.end() || id == -1) {
+                    std::cout << "Error:id: Not found\n";
+                    break;
+                }
+                listID = NodesAdr[id];
+                if (lists[listID]->Id() == id){
+                    to.type = message::KILLNPASS;
+                    //Node* tmp = new Node(Node::NEW, 0);
+                    Node* tmp = new Node();
+                    tmp->TakePortSetId(0);
+                    to.data = tmp->Port();
+                    to.send(*lists[listID]);
+                    from.recv(*lists[listID]);
+                    if (from.type != message::ERR) {
+                        tmp->Id() = from.id;
+                        std::swap(tmp, lists[listID]);
+                        delete tmp;
+                        if (lists[listID]->Id() == -2) {
+                            delete lists[listID];
+                            lists[listID] = nullptr;
+                        }
+                        std::cout << "Ok\n";
+                        NodesAdr.erase(id);
+                    } else {
+                        std::cout << "Error: while removing\n";
+                    }
+                    break;
+                } else {
+                    puts("paji!");
+                    to.type = message::REMOVE;
+                    to.id = id;
+                    to.send(*lists[listID]);
+                    from.recv(*lists[listID]);
+                    if (from.type != message::ERR) {
+                        std::cout << "Ok\n";
+                        NodesAdr.erase(id);
+                    } else {
+                        std::cout << "Error: while removing\n";
+                    }
+                }
+                break;
             case EXEC:
                 std::cin >> id;
                 std::cin >> comId;
@@ -77,19 +119,15 @@ int main(void) {
                     std::cout << "Error:id: Not found\n";
                     break;
                 } 
-                switch (command[comId]) {
-                    case START:
-                        to.data = message::START;
-                        break;
-                    case STOP:
-                        to.data = message::STOP;
-                        break;
-                    case TIME:
-                        to.data = message::TIME;
-                        break;
-                    default:
-                        std::cout << "Error:id: Wrong param\n";
-                        break;
+                if (command[comId] ==  START ) {
+                    to.data = message::START;
+                } else if (command[comId] ==  STOP) {
+                    to.data = message::STOP;
+                } else if (command[comId] ==  TIME ) {
+                    to.data = message::TIME;
+                } else {
+                    std::cout << "Error:id: Wrong param\n";
+                    break;
                 }
                 listID = NodesAdr[id];
                 to.type = message::EXEC;
@@ -114,8 +152,10 @@ int main(void) {
     }
     
     for (int i = 0; i < lists.size(); i++) {
+        puts("R");
         to.type = message::TERM;
-        to.send(*lists[i]);
+        if (lists[i] != nullptr)
+            to.send(*lists[i]);
         delete lists[i];
     }
     puts("Stop");

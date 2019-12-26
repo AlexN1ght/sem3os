@@ -14,8 +14,9 @@ int main(int argc, char** argv) {
 		return 0;
 
     int Id = atoi(argv[0]);
-	Node Parent(Node::PARENT, 0, atoi(argv[1]));
+	Node* Parent = new Node(Node::PARENT, 0, atoi(argv[1]));
     Node* Child = new Node;
+    Node* tmp;
 
     message to;
     message from;
@@ -24,11 +25,11 @@ int main(int argc, char** argv) {
     auto start = std::chrono::system_clock::now();
     auto stop = std::chrono::system_clock::now();
     int timerStat = 0;
-
     //
     
     while(true) {
-        from.recv(Parent);
+        //std::cout << Id << "wainting\n";
+        from.recv(*Parent);
         switch (from.type) {
             case message::CREATE:
                 if (Id == from.data) {
@@ -36,11 +37,11 @@ int main(int argc, char** argv) {
                         Child->New(from.id);
                         from.type = message::REPLY;
                         from.data = Child->Pid();
-                        from.send(Parent);
+                        from.send(*Parent);
                     } else {
-                        Node* tmp = new Node(Node::NEW, 0, from.id);
+                        tmp = new Node(Node::NEW, from.id);
                         to.type = message::TAKEPORT;
-                        to.id = from.id;
+                        to.id = Child->Id();
                         to.send(*tmp);
                         from.recv(*tmp);
                         if (from.type != message::ERR) {
@@ -49,29 +50,70 @@ int main(int argc, char** argv) {
                             to.send(*Child);
                             std::swap(tmp, Child);
                             delete tmp;
-
                             from.type = message::REPLY;
                             from.data = Child->Pid();
-                            from.send(Parent);
+                            from.send(*Parent);
                         } else {
                             std::cout << "err in WNode Create\n";
                         }
+                        
                     }  
                 } else {
                     from.send(*Child);
                     to.recv(*Child);
-                    to.send(Parent);
+                    to.send(*Parent);
                 }
                 break;
+            case message::REMOVE:
+                if (Child->Id() == from.id){
+                    //tmp = new Node(Node::NEW, 0);
+                    tmp = new Node();
+                    tmp->TakePortSetId(0);
+                    to.type = message::KILLNPASS;
+                    to.data = tmp->Port();
+                    to.send(*Child);
+                    to.recv(*Child);
+                    if (to.type != message::ERR) {
+                        tmp->Id() = to.id;
+                        std::swap(tmp, Child);
+                        //to.type = message::TERM;
+                        //to.send(*tmp);
+                        delete tmp;
+                    } else {
+                        std::cout << "Error: while removing\n";
+                    }
+                    from.send(*Parent);
+                    break;
+                } else {
+                    from.send(*Child);
+                    from.recv(*Child);
+                    from.send(*Parent);
+                    break;
+                }
+            case message::KILLNPASS:
+                if (Child->Id() != -2) {
+                    to.type = message::REPAR;
+                    to.data = from.data;
+                    to.send(*Child);
+                }
+                to.type = message::REPLY;
+                to.id = Child->Id();
+                to.send(*Parent);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                return 0;
+                break;
             case message::TAKEPORT:
+                //puts("Taking");
                 Child->TakePortSetId(from.id);
                 from.type = message::REPLY;
                 from.data = Child->Port();
-                puts("Sanding");
-                from.send(Parent);
+                from.send(*Parent);
                 break;
             case message::REPAR:
-                Parent.connectTo(from.data);
+                tmp = new Node(Node::PARENT, 0, from.data);
+                std::swap(tmp, Parent);
+
+                delete tmp;
                 break;
             case message::TERM:
                 if (Child->Id() != -2) {
@@ -87,7 +129,7 @@ int main(int argc, char** argv) {
                             start = std::chrono::system_clock::now();
                             stop = std::chrono::system_clock::now();
                             from.type = message::REPLY;
-                            from.send(Parent);
+                            from.send(*Parent);
                             break;
                         case message::STOP:
                             if (timerStat == 1) {
@@ -95,7 +137,7 @@ int main(int argc, char** argv) {
                                 timerStat = 0;
                             }
                             from.type = message::REPLY;
-                            from.send(Parent);
+                            from.send(*Parent);
                             break;
                         case message::TIME:
                             from.type = message::TIME;
@@ -105,13 +147,13 @@ int main(int argc, char** argv) {
                             auto msS = std::chrono::time_point_cast<std::chrono::milliseconds>(start).time_since_epoch().count();
                             auto msF = std::chrono::time_point_cast<std::chrono::milliseconds>(stop).time_since_epoch().count();
                             from.data = msF - msS;
-                            from.send(Parent);
+                            from.send(*Parent);
                             break;
                     }
                 } else {
                     from.send(*Child);
                     to.recv(*Child);
-                    to.send(Parent);
+                    to.send(*Parent);
                 }
                 break;
         }

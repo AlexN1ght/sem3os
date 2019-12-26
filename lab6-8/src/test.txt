@@ -1,3 +1,22 @@
 create 1 -1
 create 2 1
+create 3 1
+remove 2
+exec 3 start
+remove 3
 create 3 2
+create 4 -1
+create 5 4
+remove 4 
+exec 5 start
+create 7 -1
+exec 7 start
+create 9 7
+exec 9 start
+remove 7
+exec 9 time
+remove 1
+exec 9 time
+q
+
+

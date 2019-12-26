@@ -14,7 +14,7 @@ class message {
             ERR, CREATE,
             REMOVE, PING, REPLY, DEF,
             TAKEPORT, REPAR, EXEC, START,
-            STOP, TIME, TERM
+            STOP, TIME, TERM, KILLNPASS
         };
 
         int type;
@@ -35,6 +35,17 @@ class message {
             to.Sock().send(typeMes, zmq::send_flags::sndmore);
             to.Sock().send(idMes, zmq::send_flags::sndmore);
             to.Sock().send(dataMes, zmq::send_flags::none);
+            //puts("c");
+        }
+        void sendDW(Node& to) {
+            //puts("a");
+            zmq::message_t typeMes(&type, sizeof(int));
+            zmq::message_t idMes(&id, sizeof(int));
+            zmq::message_t dataMes(&data, sizeof(int));
+            //puts("b");
+            to.Sock().send(typeMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
+            to.Sock().send(idMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
+            to.Sock().send(dataMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
             //puts("c");
         }
         void recv(Node& from) {

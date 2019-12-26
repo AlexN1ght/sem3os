@@ -55,7 +55,7 @@ class Node {
                     break;
                 case NEW:
                     port = TakePort(sock);
-                    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     pid = fork();
                     if (pid == 0) {
                         using std::to_string;
@@ -76,17 +76,31 @@ class Node {
         void TakePortSetId(int Id) {
             id = Id;
             port = TakePort(sock);
+            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
+        // void ReBind() {
+        //     sock.unbind(BindURLPort(port));
+        //     sock.bind(BindURLPort(port));
+        // }
         void connectTo(int inPort) {
             sock.disconnect(ConURLPort(port));
             port = inPort;
             sock.connect(ConURLPort(port));
         }
+        void disConnect() {
+            sock.disconnect(ConURLPort(port));
+        }
+        void unBind() {
+            char* adr;
+            size_t len;
+            sock.getsockopt(ZMQ_LAST_ENDPOINT, adr, &len);
+            sock.unbind(adr);
+        }
 
         pid_t Pid() {
             return pid;
         }
-        int Id() {
+        int& Id() {
             return id;
         }
         int Port() {
