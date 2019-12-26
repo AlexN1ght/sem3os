@@ -59,8 +59,11 @@ int main(void) {
                     to.type = message::CREATE;
                     to.id = id;
                     to.data = parent;
-                    to.send(*lists[listID]);
-                    from.recv(*lists[listID]);
+                    to.sendDW(*lists[listID]);
+                    if(!from.recvCheck(*lists[listID])) {
+                        std::cout << "Error: Parent is unavailable\n";
+                        break;
+                    }
                     if (from.type != message::ERR) {
                         std::cout << "Ok: " << from.data << '\n';
                         NodesAdr[id] = NodesAdr[parent];
@@ -83,7 +86,13 @@ int main(void) {
                     tmp->TakePortSetId(0);
                     to.data = tmp->Port();
                     to.send(*lists[listID]);
-                    from.recv(*lists[listID]);
+                    if(!from.recvCheck(*lists[listID])) {
+                        std::cout << "Error: Node is unavailable\n";
+                        to.type = message::TERM;
+                        to.send(*tmp);
+                        delete tmp;
+                        break;
+                    }
                     if (from.type != message::ERR) {
                         tmp->Id() = from.id;
                         std::swap(tmp, lists[listID]);
@@ -95,20 +104,25 @@ int main(void) {
                         std::cout << "Ok\n";
                         NodesAdr.erase(id);
                     } else {
-                        std::cout << "Error: while removing\n";
+                        std::cout << "Error: Node is unavailable\n";
+                        to.type = message::TERM;
+                        to.send(*tmp);
+                        delete tmp;
                     }
                     break;
                 } else {
-                    puts("paji!");
                     to.type = message::REMOVE;
                     to.id = id;
                     to.send(*lists[listID]);
-                    from.recv(*lists[listID]);
+                    if(!from.recvCheck(*lists[listID])) {
+                        std::cout << "Error: Node is unavailable\n";
+                        break;
+                    }
                     if (from.type != message::ERR) {
                         std::cout << "Ok\n";
                         NodesAdr.erase(id);
                     } else {
-                        std::cout << "Error: while removing\n";
+                        std::cout << "Error: Node is unavailable\n";
                     }
                 }
                 break;
@@ -133,13 +147,32 @@ int main(void) {
                 to.type = message::EXEC;
                 to.id = id;
                 to.send(*lists[listID]);
-                from.recv(*lists[listID]);
+                if(!from.recvCheck(*lists[listID])) {
+                    std::cout << "Error: Node is unavailable\n";
+                    break;
+                }
                 if (from.type == message::TIME) {
                     std::cout << "Ok:" << id << ": " <<from.data << '\n';
                 } else if (from.type == message::ERR) {
-                    std::cout << "Error: Somthing wrong\n";
+                    std::cout << "Error: Node is unavailable\n";
                 } else {
                     std::cout << "Ok:" << id << '\n';
+                }
+                break;
+            case PING:
+                std::cin >> id;
+                if (NodesAdr.find(id) == NodesAdr.end() || id == -1) {
+                    std::cout << "Error: Not found\n";
+                    break;
+                }
+                listID = NodesAdr[id];
+                to.type = message::PING;
+                to.id = id;
+                to.sendDW(*lists[listID]);
+                if(!from.recvCheck(*lists[listID])) {
+                    std::cout << "Ok: 0\n";
+                } else {
+                    std::cout << "Ok: 1\n";
                 }
                 break;
             case EXIT:
@@ -152,10 +185,9 @@ int main(void) {
     }
     
     for (int i = 0; i < lists.size(); i++) {
-        puts("R");
         to.type = message::TERM;
         if (lists[i] != nullptr)
-            to.send(*lists[i]);
+            to.sendDW(*lists[i]);
         delete lists[i];
     }
     puts("Stop");

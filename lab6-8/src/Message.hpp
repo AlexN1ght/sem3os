@@ -45,7 +45,8 @@ class message {
             //puts("b");
             to.Sock().send(typeMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
             to.Sock().send(idMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
-            to.Sock().send(dataMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
+            to.Sock().send(dataMes, zmq::send_flags::dontwait);
+            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
             //puts("c");
         }
         void recv(Node& from) {
@@ -60,6 +61,31 @@ class message {
             id = *((int*)(idMes.data()));
             data = *((int*)(dataMes.data()));
             //puts("cc");
+        }
+        int recvCheck(Node& from) {
+            int trys = 4;
+            zmq::message_t typeMes;
+            zmq::message_t idMes;
+            zmq::message_t dataMes;
+            while (trys) {
+                if (from.Sock().recv(typeMes, zmq::recv_flags::dontwait) &&
+                    from.Sock().recv(idMes, zmq::recv_flags::dontwait)   &&
+                    from.Sock().recv(dataMes, zmq::recv_flags::dontwait)   ) 
+                {
+                    type = *((int*)(typeMes.data()));
+                    id = *((int*)(idMes.data()));
+                    data = *((int*)(dataMes.data()));
+                    break;
+                } else {
+                    trys--;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+            }
+            if (trys) {
+                return 1;
+            } else {
+                return 0;
+            }
         }
         
 };

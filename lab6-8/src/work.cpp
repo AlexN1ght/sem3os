@@ -44,6 +44,10 @@ int main(int argc, char** argv) {
                         to.id = Child->Id();
                         to.send(*tmp);
                         from.recv(*tmp);
+                        // if(!from.recvCheck(*tmp) {
+                        //     std::cout << "Error: Node is unavailable\n";
+                        //     break;
+                        // }
                         if (from.type != message::ERR) {
                             to.type = message::REPAR;
                             to.data = from.data;
@@ -60,8 +64,13 @@ int main(int argc, char** argv) {
                     }  
                 } else {
                     from.send(*Child);
-                    to.recv(*Child);
-                    to.send(*Parent);
+                    if(!to.recvCheck(*Child)) {
+                        to.type = message::ERR;
+                        to.send(*Parent);
+                        break;
+                    } else {
+                        to.send(*Parent);
+                    }
                 }
                 break;
             case message::REMOVE:
@@ -72,7 +81,15 @@ int main(int argc, char** argv) {
                     to.type = message::KILLNPASS;
                     to.data = tmp->Port();
                     to.send(*Child);
-                    to.recv(*Child);
+                    //to.recv(*Child);
+                    if(!to.recvCheck(*Child)) {
+                        to.type = message::ERR;
+                        to.send(*Parent);
+                        to.type = message::TERM;
+                        to.send(*tmp);
+                        delete tmp;
+                        break;
+                    }
                     if (to.type != message::ERR) {
                         tmp->Id() = to.id;
                         std::swap(tmp, Child);
@@ -86,8 +103,13 @@ int main(int argc, char** argv) {
                     break;
                 } else {
                     from.send(*Child);
-                    from.recv(*Child);
-                    from.send(*Parent);
+                    if(!to.recvCheck(*Child)) {
+                        to.type = message::ERR;
+                        to.send(*Parent);
+                        break;
+                    } else {
+                        to.send(*Parent);
+                    }
                     break;
                 }
             case message::KILLNPASS:
@@ -152,8 +174,29 @@ int main(int argc, char** argv) {
                     }
                 } else {
                     from.send(*Child);
-                    to.recv(*Child);
+                    if(!to.recvCheck(*Child)) {
+                        to.type = message::ERR;
+                        to.send(*Parent);
+                        break;
+                    } else {
+                        to.send(*Parent);
+                    }
+                    break;
+                }
+                break;
+            case message::PING:
+                if (Id == from.id) {
+                    to.type = message::REPLY;
                     to.send(*Parent);
+                } else {
+                    from.send(*Child);
+                    if(!to.recvCheck(*Child)) {
+                        to.type = message::ERR;
+                        to.send(*Parent);
+                        break;
+                    } else {
+                        to.send(*Parent);
+                    }
                 }
                 break;
         }
