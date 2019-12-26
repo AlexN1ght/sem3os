@@ -68,7 +68,7 @@ class message {
             zmq::message_t idMes;
             zmq::message_t dataMes;
             auto start = clock();
-            while (true) {
+            while (true) { 
                 if (from.Sock().recv(typeMes, zmq::recv_flags::dontwait) &&
                     from.Sock().recv(idMes, zmq::recv_flags::dontwait)   &&
                     from.Sock().recv(dataMes, zmq::recv_flags::dontwait)   ) 
