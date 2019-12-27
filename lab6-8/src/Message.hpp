@@ -27,7 +27,7 @@ class message {
             recv(from);
         }
         message(int type, int id, int data) : type(type), id(id), data(data) {}
-        void send(Node& to) {
+        void sendOLD(Node& to) {
             //puts("a");
             zmq::message_t typeMes(&type, sizeof(int));
             zmq::message_t idMes(&id, sizeof(int));
@@ -38,16 +38,23 @@ class message {
             to.Sock().send(dataMes, zmq::send_flags::none);
             //puts("c");
         }
-        void sendDW(Node& to) {
+        int send(Node& to) {
             //puts("a");
             zmq::message_t typeMes(&type, sizeof(int));
             zmq::message_t idMes(&id, sizeof(int));
             zmq::message_t dataMes(&data, sizeof(int));
             //puts("b");
-            to.Sock().send(typeMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
-            to.Sock().send(idMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
-            to.Sock().send(dataMes, zmq::send_flags::dontwait);
-            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            auto start = clock();
+            while (true) { 
+                if (to.Sock().send(typeMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait) &&
+                    to.Sock().send(idMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait)   &&
+                    to.Sock().send(dataMes, zmq::send_flags::dontwait)   ) 
+                {
+                    return 1;
+                } 
+                if (clock() - start > (CLOCKS_PER_SEC/2))
+                    return 0;
+            }
             //puts("c");
         }
         void recv(Node& from) {

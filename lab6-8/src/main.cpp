@@ -59,7 +59,7 @@ int main(void) {
                     to.type = message::CREATE;
                     to.id = id;
                     to.data = parent;
-                    to.sendDW(*lists[listID]);
+                    to.send(*lists[listID]);
                     if(!from.recvCheck(*lists[listID])) {
                         std::cout << "Error: Parent is unavailable\n";
                         break;
@@ -168,7 +168,7 @@ int main(void) {
                 listID = NodesAdr[id];
                 to.type = message::PING;
                 to.id = id;
-                to.sendDW(*lists[listID]);
+                to.send(*lists[listID]);
                 if(!from.recvCheck(*lists[listID])) {
                     std::cout << "Ok: 0\n";
                 } else {
@@ -187,7 +187,7 @@ int main(void) {
     for (int i = 0; i < lists.size(); i++) {
         to.type = message::TERM;
         if (lists[i] != nullptr)
-            to.sendDW(*lists[i]);
+            to.send(*lists[i]);
         delete lists[i];
     }
     puts("Stop");
