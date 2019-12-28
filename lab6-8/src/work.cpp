@@ -65,8 +65,8 @@ int main(int argc, char** argv) {
                 } else {
                     from.send(*Child);
                     if(!to.recvCheck(*Child)) {
-                        to.type = message::ERR;
-                        to.send(*Parent);
+                        // to.type = message::ERR;
+                        // to.send(*Parent);
                         break;
                     } else {
                         to.send(*Parent);
@@ -83,8 +83,8 @@ int main(int argc, char** argv) {
                     to.send(*Child);
                     //to.recv(*Child);
                     if(!to.recvCheck(*Child)) {
-                        to.type = message::ERR;
-                        to.send(*Parent);
+                        // to.type = message::ERR;
+                        // to.send(*Parent);
                         to.type = message::TERM;
                         to.send(*tmp);
                         delete tmp;
@@ -104,8 +104,8 @@ int main(int argc, char** argv) {
                 } else {
                     from.send(*Child);
                     if(!to.recvCheck(*Child)) {
-                        to.type = message::ERR;
-                        to.send(*Parent);
+                        // to.type = message::ERR;
+                        // to.send(*Parent);
                         break;
                     } else {
                         to.send(*Parent);
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
                 to.type = message::REPLY;
                 to.id = Child->Id();
                 to.send(*Parent);
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 return 0;
                 break;
             case message::TAKEPORT:
@@ -141,6 +141,7 @@ int main(int argc, char** argv) {
                 if (Child->Id() != -2) {
                     from.send(*Child);
                 }
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 return 0;
                 break;
             case message::EXEC:
@@ -175,8 +176,8 @@ int main(int argc, char** argv) {
                 } else {
                     from.send(*Child);
                     if(!to.recvCheck(*Child)) {
-                        to.type = message::ERR;
-                        to.send(*Parent);
+                        // to.type = message::ERR;
+                        // to.send(*Parent);
                         break;
                     } else {
                         to.send(*Parent);
@@ -191,8 +192,8 @@ int main(int argc, char** argv) {
                 } else {
                     from.send(*Child);
                     if(!to.recvCheck(*Child)) {
-                        to.type = message::ERR;
-                        to.send(*Parent);
+                        // to.type = message::ERR;
+                        // to.send(*Parent);
                         break;
                     } else {
                         to.send(*Parent);

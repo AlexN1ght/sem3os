@@ -191,5 +191,6 @@ int main(void) {
         delete lists[i];
     }
     puts("Stop");
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     return 0;
 }

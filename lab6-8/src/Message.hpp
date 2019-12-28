@@ -47,8 +47,8 @@ class message {
             auto start = clock();
             while (true) { 
                 if (to.Sock().send(typeMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait) &&
-                    to.Sock().send(idMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait)   &&
-                    to.Sock().send(dataMes, zmq::send_flags::dontwait)   ) 
+                    to.Sock().send(idMes, zmq::send_flags::sndmore | zmq::send_flags::dontwait) &&
+                    to.Sock().send(dataMes, zmq::send_flags::dontwait) )
                 {
                     return 1;
                 } 
@@ -77,8 +77,8 @@ class message {
             auto start = clock();
             while (true) { 
                 if (from.Sock().recv(typeMes, zmq::recv_flags::dontwait) &&
-                    from.Sock().recv(idMes, zmq::recv_flags::dontwait)   &&
-                    from.Sock().recv(dataMes, zmq::recv_flags::dontwait)   ) 
+                    from.Sock().recv(idMes, zmq::recv_flags::dontwait) &&
+                    from.Sock().recv(dataMes, zmq::recv_flags::dontwait) )
                 {
                     type = *((int*)(typeMes.data()));
                     id = *((int*)(idMes.data()));
